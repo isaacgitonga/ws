@@ -1,0 +1,9 @@
+# ws registry — one workspace per line: name  path
+# Lines starting with # and blank lines are ignored.
+
+# work
+core      ~/DevStudio/core
+atlas     ~/DevStudio/atlas
+
+# projects
+kanuni    ~/DevStudio/projects/kanuni

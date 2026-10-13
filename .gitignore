@@ -1,0 +1,7 @@
+# a real registry should never be committed; only workspaces.example
+workspaces
+
+# personal, not part of the project
+notes/
+CLAUDE.md
+ws.code-workspace
