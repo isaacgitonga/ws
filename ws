@@ -9,17 +9,13 @@ fi
 
 if [[ ! -f "$WS_REGISTRY" ]]; then
   mkdir -p "$(dirname "$WS_REGISTRY")" && touch "$WS_REGISTRY"
+  printf "# ws registry — one workspace per line: name  path\n# Lines starting with # and blank lines are ignored.\n" >> "$WS_REGISTRY"
 fi
 
 commands=("add" "remove" "list" "edit" "clean" "replace")
 
 names=()
 paths=()
-
-if [[ ! -s "$WS_REGISTRY" && ("$1" == "remove" || "$1" == "list") ]]; then
-  printf "ws: Registry is empty. Please add a workspace first.\n" >&2
-  exit 1
-fi
 
 while read -r name path || [[ -n "$name" ]]; do
 
@@ -28,6 +24,11 @@ while read -r name path || [[ -n "$name" ]]; do
   names+=("$name")
   paths+=("$path")
 done < "$WS_REGISTRY"
+
+if [[ ${#names[@]} -eq 0 && ("$1" == "remove" || "$1" == "list") ]]; then
+  printf "ws: Registry is empty. Please add a workspace first.\n" >&2
+  exit 1
+fi
 
 get_path() {
   local path="$1"
