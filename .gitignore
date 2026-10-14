@@ -1,5 +1,6 @@
-# a real registry should never be committed; only workspaces.example
+# a real registry should never be committed; only registry.example
 workspaces
+registry
 
 # personal, not part of the project
 notes/

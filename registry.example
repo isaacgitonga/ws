@@ -1,0 +1,10 @@
+# ws registry — one workspace per line: name  path
+# Lines starting with # and blank lines are ignored.
+
+# work
+api                            ~/code/api
+dashboard                      ~/code/dashboard.code-workspace
+
+# personal
+blog                           ~/projects/blog
+dotfiles                       ~/.dotfiles
