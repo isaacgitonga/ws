@@ -61,9 +61,15 @@ get_path() {
   printf "%s\n" "$path"
 }
 
-# clean_registry() {
-#   printf "%s\n" "${names[@]}" "${paths[@]}" > "$WS_REGISTRY"
-# }
+expand_path() {
+  local path="$1"
+
+  if [[ "$path" == "~"* ]]; then
+    path="${path/#\~/$HOME}"
+  fi
+
+  printf "%s\n" "$path"
+}
 
 cmd_add() {
   local name
@@ -159,6 +165,56 @@ cmd_add() {
   printf "ws: Workspace '%s' added successfully.\n" "$name" >&2
 }
 
+open() {
+  local name
+  local reuse
+  local path
+
+  if ! command -v code &>/dev/null; then
+    printf "ws: VS Code is not installed or not in PATH.\n" >&2
+    exit 1
+  fi
+
+  if [[ $# -eq 1 ]]; then
+    name="$1"
+  elif [[ $# -eq 2 ]]; then 
+    if [[ "$1" == "-r" || "$1" == "--reuse" ]]; then
+      reuse=true; name="$2"
+    elif [[ "$2" == "-r" || "$2" == "--reuse" ]]; then
+      reuse=true; name="$1"
+    else
+      printf "ws: Invalid arguments for opening a workspace.\nUsage: ws [-r] <name>\n" >&2
+      exit 1
+    fi
+  else
+    printf "ws: Invalid arguments for opening a workspace.\nUsage: ws [-r] <name>\n" >&2
+    exit 1
+  fi
+
+  for i in "${!names[@]}"; do
+    if [[ "${names[i]}" == "$name" ]]; then
+      path="$(expand_path "${paths[i]}")"
+
+      if [[ ! -d "$path" && ! -f "$path" ]]; then
+        printf "ws: Path '%s' does not exist.\nws: Run 'ws remove %s' to remove.\n" "$path" "$name" >&2
+        exit 1
+      fi
+
+      if [[ "$reuse" == true ]]; then
+        code --reuse-window "$path"
+      else
+        code "$path"
+      fi
+
+      printf "ws: Workspace '%s' opened at '%s'.\n" "$name" "$path" >&2
+      exit 0
+    fi
+  done
+
+  printf "ws: Workspace '%s' not found.\n" "$name" >&2
+  exit 1
+}
+
 case "$1" in
   add)
     shift; cmd_add "$@"
@@ -171,7 +227,13 @@ case "$1" in
     ;;
   replace)
     ;;
+  --help)
+    ;;
   *)
+    if [[ $# -eq 1 || $# -eq 2 ]]; then
+      open "$@"
+    fi
+
     printf "ws: Unknown command '%s'.\n" "$1" >&2
     exit 1
     ;;
