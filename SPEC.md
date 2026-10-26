@@ -37,11 +37,11 @@ blog                           ~/projects/blog
 | `ws` | Fuzzy picker (fzf) showing name and path. Selecting one opens it. Pressing Esc does nothing and exits quietly. |
 | `ws path <name>` | Print the workspace's absolute path (with `~` expanded) to stdout and nothing else. The Phase 2 wrapper is built on this. |
 | `ws add` | Register a directory or `.code-workspace` file. See "Adding a workspace" below. |
-| `ws remove <name>` | Remove the entry from the registry. The folder itself is untouched. |
+| `ws rem <name>` | Remove the entry from the registry. The folder itself is untouched. |
 | `ws list` | List every entry and flag paths that no longer exist. |
 | `ws edit` | Open the registry file in VS Code. |
 | `ws clean` | Not yet specified. |
-| `ws replace` | Not yet specified. |
+| `ws rep` | Not yet specified. |
 | `ws --help` | Short usage text. |
 
 ### Adding a workspace
@@ -70,18 +70,18 @@ blog                           ~/projects/blog
 Plus zsh tab completion:
 
 - After `ws`, Tab completes subcommands and workspace names.
-- After `ws cd`, `ws remove` or `ws path`, Tab completes workspace names only.
+- After `ws cd`, `ws rem` or `ws path`, Tab completes workspace names only.
 
 The wrapper reaches the script with `command ws ...`, because a plain `ws` inside the function would call the function itself.
 
 ## Rules and edge cases
 
-- **Reserved names:** `add`, `remove`, `list`, `edit`, `clean`, `replace`, `path`, `cd` and `help` can't be workspace names. `ws add` rejects them.
+- **Reserved names:** `add`, `rem`, `list`, `edit`, `clean`, `rep`, `path`, `cd` and `help` can't be workspace names. `ws add` rejects them.
 - **Invalid names on `add`:** reject names containing whitespace or starting with `#`.
 - **Duplicate name on `add`:** refuse.
 - **Duplicate path on `add`:** warn, naming the existing workspace, but allow it.
 - **Unknown name:** print `ws: Workspace 'foo' not found.`
-- **Path no longer exists:** say so and suggest `ws remove <name>`. Don't open anything.
+- **Path no longer exists:** say so and suggest `ws rem <name>`. Don't open anything.
 - **Missing dependency:** if `code` is missing, or `fzf` is missing when the picker is used, say exactly what's missing.
 - **Output:** errors go to stderr, prefixed `ws:`. Status messages (such as "added" or "opened") also go to stderr. Stdout is only for data, like the output of `ws path` and `ws list`. For `ws path`, stdout must contain only the path, or nothing at all on error, because the wrapper captures it.
 - **Exit codes:** return `0` on success and `1` on any error. Cancelling the picker returns `0`.
@@ -101,8 +101,8 @@ Each step works on its own before you start the next.
 - [x] `ws <name>`: open in VS Code
 - [ ] `ws list`
 - [x] `ws add`
-- [ ] `ws remove`, `ws edit`
-- [ ] `ws clean`, `ws replace`
+- [ ] `ws rem`, `ws edit`
+- [ ] `ws clean`, `ws rep`
 - [ ] `ws` (the picker)
 - [ ] Edge cases and error messages from the rules above, with ShellCheck clean
 

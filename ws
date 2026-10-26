@@ -12,7 +12,7 @@ if [[ ! -f "$WS_REGISTRY" ]]; then
   printf "# ws registry — one workspace per line: name  path\n# Lines starting with '#' and blank lines are ignored.\n\n" >> "$WS_REGISTRY"
 fi
 
-commands=("add" "remove" "list" "edit" "clean" "replace")
+commands=("add" "rem" "list" "edit" "clean" "rep")
 
 names=()
 paths=()
@@ -24,7 +24,7 @@ while read -r name path || [[ -n "$name" ]]; do
   paths+=("$path")
 done < "$WS_REGISTRY"
 
-if [[ ${#names[@]} -eq 0 && ("$1" == "remove" || "$1" == "list") ]]; then
+if [[ ${#names[@]} -eq 0 && ("$1" == "rem" || "$1" == "list") ]]; then
   printf "ws: Registry is empty. Please add a workspace first.\n" >&2
   exit 1
 fi
@@ -196,7 +196,7 @@ open() {
       path="$(expand_path "${paths[i]}")"
 
       if [[ ! -d "$path" && ! -f "$path" ]]; then
-        printf "ws: Path '%s' does not exist.\nws: Run 'ws remove %s' to remove.\n" "$path" "$name" >&2
+        printf "ws: Path '%s' does not exist.\nws: Run 'ws rem %s' to remove.\n" "$path" "$name" >&2
         exit 1
       fi
 
@@ -237,7 +237,7 @@ cmd_path() {
 
   if [[ -z "$path" ]]; then
     printf "ws: Workspace '%s' does not exist or has no path. Consider removing.\n" "$name" >&2
-    printf "ws: Run 'ws remove %s' to remove.\n" "$name" >&2
+    printf "ws: Run 'ws rem %s' to remove.\n" "$name" >&2
     exit 1
   fi
 
@@ -246,7 +246,7 @@ cmd_path() {
   if [[ ! -d "$path" && ! -f "$path" ]]; then
     printf "ws: Path '%s'.\n\n" "$path" >&2
     printf "ws: Path does not exist in file system. Consider removing.\n" >&2
-    printf "ws: Run 'ws remove %s' to remove.\n" "$name" >&2
+    printf "ws: Run 'ws rem %s' to remove.\n" "$name" >&2
     exit 1
   fi
 
@@ -254,13 +254,13 @@ cmd_path() {
   exit 0
 }
 
-cmd_remove() {
+cmd_rem() {
   local workspace="$1"
   local exists=false
   local name path
 
   if [[ $# -ne 1 || -z "$1" ]]; then
-    printf "ws: Invalid number of arguments for 'remove' command.\nUsage: ws remove <name>\n" >&2
+    printf "ws: Invalid number of arguments for 'rem' command.\nUsage: ws rem <name>\n" >&2
     exit 1
   fi
 
@@ -303,14 +303,14 @@ arg_help() {
   printf "  path <name>             Print a workspace's absolute path\n"
   printf "  add [name | path]       Register the current directory, or the given path\n"
   printf "  add -n <name> -p <path> Register a path under a name (flags in any order)\n"
-  printf "  remove <name>           Remove a workspace from the registry\n"
+  printf "  rem <name>              Remove a workspace from the registry\n"
   printf "  --help                  Show this help message\n\n"
   printf "Examples:\n"
   printf "  ws myproject\n"
   printf "  ws -r myproject\n"
   printf "  ws add\n"
   printf "  ws add -n myproject -p ~/projects/myproject\n"
-  printf "  ws remove myproject\n"
+  printf "  ws rem myproject\n"
   printf "  cd \"\$(ws path myproject)\"\n\n"
   printf "Registry: %s (override with WS_REGISTRY)\n" "$WS_REGISTRY"
 }
@@ -322,14 +322,14 @@ case "$1" in
   path)
     shift; cmd_path "$@"
     ;;
-  remove)
-    shift; cmd_remove "$@"
+  rem)
+    shift; cmd_rem "$@"
     ;;
   list)
     ;;
   edit)
     ;;
-  replace)
+  rep)
     ;;
   --help)
     arg_help
