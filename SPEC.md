@@ -96,8 +96,8 @@ Each step works on its own before you start the next.
 
 **Phase 1: `ws`**
 
-- [ ] Skeleton: shebang, executable, symlinked onto `PATH`, `ws --help` prints usage
-- [ ] `ws path <name>`: look up a name in the registry
+- [x] Skeleton: shebang, executable, symlinked onto `PATH`, `ws --help` prints usage
+- [x] `ws path <name>`: look up a name in the registry
 - [x] `ws <name>`: open in VS Code
 - [ ] `ws list`
 - [x] `ws add`

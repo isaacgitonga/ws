@@ -9,7 +9,7 @@ fi
 
 if [[ ! -f "$WS_REGISTRY" ]]; then
   mkdir -p "$(dirname "$WS_REGISTRY")" && touch "$WS_REGISTRY"
-  printf "# ws registry — one workspace per line: name  path\n# Lines starting with # and blank lines are ignored.\n" >> "$WS_REGISTRY"
+  printf "# ws registry — one workspace per line: name  path\n# Lines starting with '#' and blank lines are ignored.\n\n" >> "$WS_REGISTRY"
 fi
 
 commands=("add" "remove" "list" "edit" "clean" "replace")
@@ -18,7 +18,6 @@ names=()
 paths=()
 
 while read -r name path || [[ -n "$name" ]]; do
-
   [[ -z "$name" || "$name" == \#* ]] && continue
 
   names+=("$name")
@@ -145,7 +144,7 @@ cmd_add() {
     fi
   done
 
-  if [[ "$name" == \#* ]]; then
+  if [[ "$name" == "#"* ]]; then
     printf "ws: Workspace name cannot start with '#'.\n" >&2
     exit 1
   fi
@@ -216,11 +215,115 @@ open() {
   exit 1
 }
 
+cmd_path() {
+  local name="$1"
+  local path
+
+  if [[ $# -ne 1 ]]; then
+    printf "ws: Invalid number of arguments for 'path' command.\nUsage: ws path <name>\n" >&2
+    exit 1
+  fi
+
+  if [[ -z "$name" ]]; then
+    printf "ws: Missing workspace name for 'path' command.\nUsage: ws path <name>\n" >&2
+    exit 1
+  fi
+
+  for i in "${!names[@]}"; do
+    if [[ "${names[i]}" == "$name" ]]; then
+      path="${paths[i]}"
+    fi
+  done 
+
+  if [[ -z "$path" ]]; then
+    printf "ws: Workspace '%s' does not exist or has no path. Consider removing.\n" "$name" >&2
+    printf "ws: Run 'ws remove %s' to remove.\n" "$name" >&2
+    exit 1
+  fi
+
+  path="$(expand_path "$path")"
+
+  if [[ ! -d "$path" && ! -f "$path" ]]; then
+    printf "ws: Path '%s'.\n\n" "$path" >&2
+    printf "ws: Path does not exist in file system. Consider removing.\n" >&2
+    printf "ws: Run 'ws remove %s' to remove.\n" "$name" >&2
+    exit 1
+  fi
+
+  printf "%s\n" "$path"
+  exit 0
+}
+
+cmd_remove() {
+  local workspace="$1"
+  local exists=false
+  local name path
+
+  if [[ $# -ne 1 || -z "$1" ]]; then
+    printf "ws: Invalid number of arguments for 'remove' command.\nUsage: ws remove <name>\n" >&2
+    exit 1
+  fi
+
+  for i in "${!names[@]}"; do
+    [[ "${names[i]}" == "$workspace" ]] && exists=true
+  done
+
+  if ! $exists; then
+    printf "ws: Workspace '%s' does not exist.\n" "$workspace" >&2
+    exit 1
+  fi
+
+  temp_registry="$(mktemp -p "$(dirname "$WS_REGISTRY")" "$(basename "$WS_REGISTRY").tmp.XXXXXX")" || { printf "ws: Failed to remove workspace '%s'\n" "$workspace" >&2; exit 1; }
+  trap 'rm -f "$temp_registry"' EXIT 
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    read -r name path <<< "$line"
+
+    if [[ "$line" != "#"* && "$workspace" == "$name" ]]; then
+      continue 
+    fi
+    
+    printf "%s\n" "$line" >> "$temp_registry"
+  done < "$WS_REGISTRY"
+
+  chmod --reference="$WS_REGISTRY" "$temp_registry" 2>/dev/null
+  mv "$temp_registry" "$WS_REGISTRY"
+
+  printf "ws: Workspace '%s' removed\n" "$workspace" >&2
+  exit 0
+}
+
+arg_help() {
+  printf "ws: Workspace Manager for VS Code\n\n"
+  printf "Usage: ws <name>\n"
+  printf "       ws <command> [args...]\n\n"
+  printf "Commands:\n"
+  printf "  <name>                  Open a workspace in VS Code\n"
+  printf "  -r, --reuse <name>      Open it in the current VS Code window\n"
+  printf "  path <name>             Print a workspace's absolute path\n"
+  printf "  add [name | path]       Register the current directory, or the given path\n"
+  printf "  add -n <name> -p <path> Register a path under a name (flags in any order)\n"
+  printf "  remove <name>           Remove a workspace from the registry\n"
+  printf "  --help                  Show this help message\n\n"
+  printf "Examples:\n"
+  printf "  ws myproject\n"
+  printf "  ws -r myproject\n"
+  printf "  ws add\n"
+  printf "  ws add -n myproject -p ~/projects/myproject\n"
+  printf "  ws remove myproject\n"
+  printf "  cd \"\$(ws path myproject)\"\n\n"
+  printf "Registry: %s (override with WS_REGISTRY)\n" "$WS_REGISTRY"
+}
+
 case "$1" in
   add)
     shift; cmd_add "$@"
     ;;
+  path)
+    shift; cmd_path "$@"
+    ;;
   remove)
+    shift; cmd_remove "$@"
     ;;
   list)
     ;;
@@ -229,6 +332,7 @@ case "$1" in
   replace)
     ;;
   --help)
+    arg_help
     ;;
   *)
     if [[ $# -eq 1 || $# -eq 2 ]]; then
