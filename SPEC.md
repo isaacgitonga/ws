@@ -99,7 +99,7 @@ Each step works on its own before you start the next.
 - [x] Skeleton: shebang, executable, symlinked onto `PATH`, `ws --help` prints usage
 - [x] `ws path <name>`: look up a name in the registry
 - [x] `ws <name>`: open in VS Code
-- [ ] `ws list`
+- [x] `ws list`
 - [x] `ws add`
 - [ ] `ws rem`, `ws edit`
 - [ ] `ws clean`, `ws rep`

@@ -293,6 +293,37 @@ cmd_rem() {
   exit 0
 }
 
+cmd_list() {
+  local name path full_path
+
+  if [[ "$#" -ne 0 ]]; then
+    printf "ws: Command 'list' does not require any arguments.\nUsage: ws list\n\n" >&2
+    exit 1
+  fi
+
+  if [[ ${#names[@]} -eq 0 ]]; then
+    printf "ws: No workspaces found.\nRun 'ws add -n <name> -p <path>' to add a workspace\n" >&2
+    exit 1
+  fi
+
+  printf "\n" >&2
+
+  for i in "${!names[@]}"; do
+    name="${names[i]}"
+    path="${paths[i]}"
+    full_path="$(expand_path "$path")"
+
+    if [[ ! -d "$full_path" && ! -f  "$full_path" ]]; then
+      path="${path} (invalid path)"
+    fi
+
+    printf "%-25s %s\n" "$name" "$path"
+  done
+
+  printf "\nRegistry: %s\n" "$WS_REGISTRY" >&2
+  exit 0
+}
+
 arg_help() {
   printf "ws: Workspace Manager for VS Code\n\n"
   printf "Usage: ws <name>\n"
@@ -304,6 +335,7 @@ arg_help() {
   printf "  add [name | path]       Register the current directory, or the given path\n"
   printf "  add -n <name> -p <path> Register a path under a name (flags in any order)\n"
   printf "  rem <name>              Remove a workspace from the registry\n"
+  printf "  list                    List all workspaces, flagging invalid paths\n"
   printf "  --help                  Show this help message\n\n"
   printf "Examples:\n"
   printf "  ws myproject\n"
@@ -311,6 +343,7 @@ arg_help() {
   printf "  ws add\n"
   printf "  ws add -n myproject -p ~/projects/myproject\n"
   printf "  ws rem myproject\n"
+  printf "  ws list\n"
   printf "  cd \"\$(ws path myproject)\"\n\n"
   printf "Registry: %s (override with WS_REGISTRY)\n" "$WS_REGISTRY"
 }
@@ -326,6 +359,7 @@ case "$1" in
     shift; cmd_rem "$@"
     ;;
   list)
+    shift; cmd_list "$@"
     ;;
   edit)
     ;;
